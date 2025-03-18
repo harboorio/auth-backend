@@ -49,8 +49,8 @@ jobs:
             -   name: find new version
                 id: find-new-version
                 # fetches the version prop of the newly published package
-                #run: echo "NEW_VERSION=$(npm view ./ version)" >> "$GITHUB_OUTPUT"
-                run: echo "NEW_VERSION=$(npm view "$(npm view ./ name)"@latest --registry "$(npm view ./ publishConfig.registry)" version)" >> "$GITHUB_OUTPUT"
+                run: echo "NEW_VERSION=$(npm view ./ version)" >> "$GITHUB_OUTPUT"
+                #run: echo "NEW_VERSION=$(npm view "$(npm view ./ name)"@latest --registry "$(npm view ./ publishConfig.registry)" version)" >> "$GITHUB_OUTPUT"
             -   name: login to container registry
                 uses: docker/login-action@v3
                 with:
@@ -64,4 +64,4 @@ jobs:
                 with:
                     context: .
                     push: true
-                    tags: ghcr.io/harboorio/auth-backend:${{ steps.find-new-version.outputs.DEPLOY_VERSION }}
+                    tags: ghcr.io/harboorio/auth-backend:${{ steps.find-new-version.outputs.NEW_VERSION }}

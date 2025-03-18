@@ -8,10 +8,11 @@ on:
             - '^v[0-9]+'
 
 env:
-    CI: 1
-    NODE_ENV: production # prevent husky scripts to run
-    HUSKY: 0
-    GITHUB_TOKEN: ${{ secrets.PERSONAL_PAT }} # disable watch mode when running vitest
+    CI: 1 # disable watch mode when running vitest
+    NODE_ENV: production
+    HUSKY: 0 # prevent husky scripts to run
+    GITHUB_TOKEN: ${{ secrets.PERSONAL_PAT }}
+    NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     # aws vars are to fetch env vars from secret manager
     AWS_REGION: ${{ secrets.AWS_REGION }}
     AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}

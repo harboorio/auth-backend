@@ -1,0 +1,6 @@
+{
+    "error_unexpected": "An unexpected error occurred. Try again later, please.",
+    "error_request_canceled": "The request has been canceled by the user.",
+    "error_bad_request": "Unable to process this request. Check your request and try again, please.",
+    "hello": "Hello"
+}

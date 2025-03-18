@@ -1,0 +1,6 @@
+{
+    "error_unexpected": "Beklenmedik bir hata oluştu. Lütfen daha sonra tekrar deneyin.",
+    "error_request_canceled": "İşlem kullanıcı tarafından iptal edildi.",
+    "error_bad_request": "Bu isteği işlenemedi. Lütfen isteğinizi kontrol edin ve tekrar deneyin.",
+    "hello": "Merhaba"
+}

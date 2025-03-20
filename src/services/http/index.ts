@@ -36,7 +36,7 @@ export async function initServer(env: ReturnType<typeof createEnvironment>) {
         server.on("dropRequest", onDropRequest);
         server.on("clientError", onClientError);
 
-        server.listen(3000, "0.0.0.0", () => {
+        server.listen(parseInt(env.get("PUBLIC_PORT")), "0.0.0.0", () => {
             logger.info("Server is online.");
         });
 

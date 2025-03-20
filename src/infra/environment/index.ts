@@ -15,6 +15,7 @@ export interface Environment {
     REDIS_CONN_STR: string;
     POSTGRES_CONN_STR: string;
     RABBITMQ_CONN_STR: string;
+    PUBLIC_PORT: string;
 }
 
 export class EnvironmentMap extends Map<keyof Environment, Environment[keyof Environment]> {

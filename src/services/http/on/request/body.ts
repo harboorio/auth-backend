@@ -15,10 +15,6 @@ export async function readBody(
             return resolve({ data: null, size: 0, err: null });
         }
 
-        if (!req.readable) {
-            return resolve({ data: null, size: 0, err: null });
-        }
-
         let cleaned = false;
         let received = 0;
         let chunks: Buffer<ArrayBufferLike>[] = [];

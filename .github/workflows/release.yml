@@ -59,9 +59,17 @@ jobs:
                     password: ${{ env.GITHUB_TOKEN }}
             -   name: setup docker
                 uses: docker/setup-buildx-action@v3
+            -   name: create test container image
+                uses: docker/build-push-action@v6
+                with:
+                    context: .
+                    target: test
+                    push: true
+                    tags: ghcr.io/${{ github.repository }}:${{ steps.find-new-version.outputs.NEW_VERSION }}-test
             -   name: upload container image
                 uses: docker/build-push-action@v6
                 with:
                     context: .
+                    target: prod
                     push: true
                     tags: ghcr.io/${{ github.repository }}:${{ steps.find-new-version.outputs.NEW_VERSION }}

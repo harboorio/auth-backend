@@ -13,7 +13,7 @@ env:
     HUSKY: 0 # prevent husky scripts to run
     GITHUB_TOKEN: ${{ secrets.PERSONAL_PAT }}
     NPM_TOKEN: ${{ secrets.PERSONAL_PAT }}
-    # aws vars are to fetch env vars from secret manager
+    # aws vars are to fetch env vars from aws secret manager
     AWS_REGION: ${{ secrets.AWS_REGION }}
     AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
     AWS_ACCESS_KEY_SECRET: ${{ secrets.AWS_ACCESS_KEY_SECRET }}

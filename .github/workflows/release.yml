@@ -48,7 +48,6 @@ jobs:
                 run: pnpm exec semantic-release
             -   name: find new version
                 id: find-new-version
-                # fetches the version prop of the newly published package
                 run: echo "NEW_VERSION=$(npm view ./ version)" >> "$GITHUB_OUTPUT"
                 #run: echo "NEW_VERSION=$(npm view "$(npm view ./ name)"@latest --registry "$(npm view ./ publishConfig.registry)" version)" >> "$GITHUB_OUTPUT"
             -   name: login to container registry

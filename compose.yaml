@@ -43,7 +43,10 @@ services:
                 condition: service_healthy
         profiles:
             - production
-        restart: unless-stopped
+        restart: no
+        deploy:
+            restart_policy:
+                condition: none
 
     core-dev:
         build:

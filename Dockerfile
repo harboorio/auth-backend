@@ -16,10 +16,16 @@ RUN --mount=type=bind,source=package.json,target=package.json \
 COPY . .
 CMD pnpm run test run
 
+FROM base as prod-build
+RUN --mount=type=bind,source=package.json,target=package.json \
+    --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
+    pnpm i --frozen-lockfile
+COPY . .
+RUN pnpm run build
+
 FROM base as prod
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
     pnpm i --prod --frozen-lockfile
-COPY . .
-RUN pnpm run build
+COPY --from=prod-build /app/dist /app/dist
 CMD node --enable-source-maps ./dist/index.js

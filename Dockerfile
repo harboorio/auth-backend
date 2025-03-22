@@ -19,6 +19,7 @@ CMD pnpm run test run
 FROM base as prod
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
-    pnpm i --prod --frozen-lockfile
+    pnpm i --prod --frozen-lockfile \
+    pnpm run build
 COPY . .
 CMD node --enable-source-maps ./dist/index.js

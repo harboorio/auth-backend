@@ -12,7 +12,7 @@ CMD pnpm i --frozen-lockfile && pnpm run dev
 FROM base as test
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
-    pnpm i --frozen-lockfile \
+    pnpm i --frozen-lockfile
 COPY . .
 CMD pnpm run test
 

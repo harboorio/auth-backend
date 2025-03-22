@@ -37,7 +37,7 @@ export async function initServer(env: ReturnType<typeof createEnvironment>) {
         server.on("clientError", onClientError);
 
         server.listen(3000, "0.0.0.0", () => {
-            logger.info("Server is online.");
+            logger.info("Server (:3000) is online.");
         });
 
         process.on("unhandledRejection", (err) => {

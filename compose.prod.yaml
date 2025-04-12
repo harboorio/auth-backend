@@ -1,0 +1,55 @@
+services:
+    core:
+        image: ghcr.io/harboorio/auth-backend:${APP_IMAGE_VERSION}
+        ports:
+            - "${PUBLIC_PORT}:3000"
+        environment:
+            - AWS_REGION
+            - AWS_ACCESS_KEY
+            - AWS_ACCESS_KEY_SECRET
+        depends_on:
+            core-migration:
+                condition: service_completed_successfully
+        healthcheck:
+            test: curl --fail http://${HOST} || exit 1
+            interval: 60s
+            retries: 5
+            start_period: 30s
+            timeout: 3s
+        restart: unless-stopped
+
+    core-test:
+        image: ghcr.io/harboorio/auth-backend:${APP_IMAGE_VERSION}-test
+        environment:
+            - AWS_REGION
+            - AWS_ACCESS_KEY
+            - AWS_ACCESS_KEY_SECRET
+        depends_on:
+            core-migration:
+                condition: service_completed_successfully
+            rabbitmq:
+                condition: service_healthy
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+            clickhouse:
+                condition: service_healthy
+        restart: no
+        deploy:
+            restart_policy:
+                condition: none
+
+    core-migration:
+        image: ghcr.io/harboorio/auth-backend:${APP_IMAGE_VERSION}-migration
+        environment:
+            - AWS_REGION
+            - AWS_ACCESS_KEY
+            - AWS_ACCESS_KEY_SECRET
+        depends_on:
+            core-test:
+                condition: service_completed_successfully
+        restart: no
+        deploy:
+            restart_policy:
+                condition: none

@@ -1,0 +1,76 @@
+services:
+    core-dev:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: dev
+        volumes:
+            -   type: bind
+                source: ./
+                target: /app/
+            -   type: volume # preventing node_modules getting copied into the dev env
+                source: node_modules # this is an id, not a path
+                target: /app/node_modules/
+        ports:
+            - "3000:3000"
+        environment:
+            - AWS_REGION
+            - AWS_ACCESS_KEY
+            - AWS_ACCESS_KEY_SECRET
+        depends_on:
+            rabbitmq:
+                condition: service_healthy
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+            clickhouse:
+                condition: service_healthy
+        restart: unless-stopped
+
+    core-dev-test:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: dev-test
+        volumes:
+            -   type: bind
+                source: ./
+                target: /app/
+            -   type: volume # preventing node_modules getting copied into the dev env
+                source: node_modules # this is an id, not a path
+                target: /app/node_modules/
+        environment:
+            NODE_ENV: test
+        env_file:
+            - .env
+        depends_on:
+            rabbitmq:
+                condition: service_healthy
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+            clickhouse:
+                condition: service_healthy
+        restart: no
+        deploy:
+            restart_policy:
+                condition: none
+
+    clickhouse:
+        ports:
+            - "8123:8123"
+            - "9000:9000"
+
+    rabbitmq:
+        ports:
+            - "5672:5672"
+
+    postgres:
+        ports:
+            - "5433:5432"
+
+    redis:
+        ports:
+            - "6380:6379"

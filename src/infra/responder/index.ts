@@ -74,6 +74,11 @@ export class Responder {
         this.res.end();
     }
 
+    serverError() {
+        this.res.statusCode = 500;
+        this.res.end();
+    }
+
     findContentLength(input: string) {
         return Buffer.byteLength(input, "utf-8");
     }

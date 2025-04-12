@@ -1,5 +1,5 @@
 import http from "node:http";
-import type { ServerContext } from "@services/http/context";
+import type { ServerContext } from "@src/context";
 import { getTranslationFunction } from "@infra/message-catalog/index";
 import { Buffer } from "node:buffer";
 import { ApplicationHttpError } from "@infra/error-manager/error-manager";

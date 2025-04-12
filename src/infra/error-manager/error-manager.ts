@@ -57,3 +57,20 @@ export class ApplicationHttpError extends ApplicationError {
         return 500;
     }
 }
+
+export const applicationHttpErrorSchema = {
+    type: "object",
+    properties: {
+        error: {
+            type: "object",
+            properties: {
+                code: { type: "string" },
+                message: { type: "string" },
+            },
+            required: ["code"],
+            additionalProperties: false,
+        },
+    },
+    required: ["error"],
+    additionalProperties: false,
+} as const;

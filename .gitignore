@@ -2,7 +2,7 @@ dist
 
 # Environment
 .env
-.env*.local
+.env.test
 *.env
 
 # dependencies

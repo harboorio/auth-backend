@@ -1,0 +1,1 @@
+import "@services/worker/index";

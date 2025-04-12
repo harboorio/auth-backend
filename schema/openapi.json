@@ -1,0 +1,251 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "@harboor/auth-backend",
+        "version": "v0.1.0",
+        "description": "API schema.",
+        "contact": {
+            "name": "Harboor",
+            "url": "https://harboor.io",
+            "email": "dock@harboor.io"
+        }
+    },
+    "servers": [
+        {
+            "url": "http://localhost:3000",
+            "description": "Development server."
+        }
+    ],
+    "paths": {
+        "/": {
+            "get": {
+                "operationId": "HomeGet",
+                "description": "Lorem ipsum",
+                "tags": [
+                    "harboor"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "version": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "name",
+                                        "version"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/otp": {
+            "post": {
+                "operationId": "OtpRequestPost",
+                "description": "Lorem ipsum",
+                "tags": [
+                    "harboor"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "credentialType": {
+                                        "enum": [
+                                            "email",
+                                            "phone"
+                                        ]
+                                    },
+                                    "credential": {
+                                        "oneOf": [
+                                            {
+                                                "type": "string",
+                                                "format": "email"
+                                            },
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "country": {
+                                                        "type": "string",
+                                                        "format": "country_code"
+                                                    },
+                                                    "num": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "country",
+                                                    "num"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "credentialType",
+                                    "credential"
+                                ],
+                                "if": {
+                                    "properties": {
+                                        "credentialType": {
+                                            "const": "email"
+                                        }
+                                    }
+                                },
+                                "then": {
+                                    "properties": {
+                                        "credential": {
+                                            "type": "string",
+                                            "format": "email"
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "properties": {
+                                        "credential": {
+                                            "type": "object",
+                                            "properties": {
+                                                "country": {
+                                                    "type": "string",
+                                                    "format": "country_code"
+                                                },
+                                                "num": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "country",
+                                                "num"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "success"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "object",
+                                            "properties": {
+                                                "code": {
+                                                    "type": "string"
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "code"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    },
+                                    "required": [
+                                        "error"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "operationId": "OtpVerifyPut",
+                "description": "Lorem ipsum",
+                "tags": [
+                    "harboor"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "otp": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "otp"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "success"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "harboor"
+        }
+    ]
+}

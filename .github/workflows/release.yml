@@ -49,7 +49,6 @@ jobs:
             -   name: find new version
                 id: find-new-version
                 run: echo "NEW_VERSION=$(npm view ./ version)" >> "$GITHUB_OUTPUT"
-                #run: echo "NEW_VERSION=$(npm view "$(npm view ./ name)"@latest --registry "$(npm view ./ publishConfig.registry)" version)" >> "$GITHUB_OUTPUT"
             -   name: login to container registry
                 uses: docker/login-action@v3
                 with:
@@ -65,6 +64,13 @@ jobs:
                     target: test
                     push: true
                     tags: ghcr.io/${{ github.repository }}:${{ steps.find-new-version.outputs.NEW_VERSION }}-test
+            -   name: create migrations container
+                uses: docker/build-push-action@v6
+                with:
+                    context: .
+                    target: migration
+                    push: true
+                    tags: ghcr.io/${{ github.repository }}:${{ steps.find-new-version.outputs.NEW_VERSION }}-migration
             -   name: create production container
                 uses: docker/build-push-action@v6
                 with:

@@ -8,23 +8,31 @@
         "url": "git+https://github.com/harboorio/auth-backend.git"
     },
     "main": "./dist/index.js",
-    "exports": "./dist/index.js",
+    "exports": {
+        ".": "./dist/index.js",
+        "./schema": {
+            "types": "./schema/index.d.ts",
+            "default": "./schema/index.mjs"
+        }
+    },
     "scripts": {
         "check": "tsc --noEmit --skipLibCheck",
         "format:check": "prettier src --check",
         "format": "prettier $(git diff --cached --name-only --diff-filter=ACMR src | sed 's| |\\\\ |g') --write --ignore-unknown",
-        "dev": "node build.mjs",
-        "build": "NODE_ENV=production node build.mjs",
-        "test": "vitest",
+        "dev": "node scripts/app.mjs",
+        "build": "NODE_ENV=production node scripts/app.mjs",
+        "test": "NODE_ENV=test vitest",
         "prepare": "husky || true",
-        "commit": "cz"
+        "commit": "cz",
+        "migration": "dbmate new",
+        "migrate": "dbmate -e POSTGRES_CONN_STR --wait up",
+        "build:schemas": "node scripts/schema.mjs && node ./dist-schema/schema.js && rm -rf ./dist-schema"
     },
     "files": [
-        ".npmrc",
-        "compose.env",
-        "dist/*",
+        "dist",
         "package.json",
-        "compose.yaml"
+        "compose.base.yaml",
+        "compose.prod.yaml"
     ],
     "publishConfig": {
         "access": "public",
@@ -36,31 +44,41 @@
         }
     },
     "devDependencies": {
+        "@stoplight/spectral-core": "^1.19.5",
+        "@stoplight/spectral-parsers": "^1.0.5",
+        "@stoplight/spectral-rulesets": "^1.21.4",
         "@types/amqplib": "^0.10.6",
         "@types/auth-header": "^1.0.6",
         "@types/node": "^22.13.4",
         "@types/proxy-addr": "^2.0.3",
         "@types/shelljs": "^0.8.15",
+        "@types/supertest": "^6.0.2",
         "commitizen": "^4.3.1",
         "cz-conventional-changelog": "^3.3.0",
+        "dbmate": "^2.26.0",
         "esbuild": "^0.25.0",
         "esbuild-plugin-copy": "^2.1.1",
         "esbuild-plugin-pino": "^2.2.2",
         "husky": "^9.1.7",
+        "json-schema-to-typescript": "^15.0.4",
         "prettier": "^3.5.3",
         "semantic-release": "^24.2.3",
-        "shelljs": "^0.8.5",
+        "supertest": "^7.1.0",
         "typescript": "^5.7.3",
         "underscore": "^1.13.7",
+        "vite": "^6.2.6",
         "vitest": "^3.0.6"
     },
     "dependencies": {
+        "@clickhouse/client": "^1.11.0",
         "@fastify/cors": "^11.0.0",
         "@fastify/formbody": "^8.0.2",
         "@fastify/sensible": "^6.0.3",
         "@fastify/swagger": "^9.4.2",
         "@harboor/cli": "^1.0.0",
-        "@harboor/core": "^1.4.0",
+        "@harboor/core": "^1.5.0",
+        "ajv": "^8.17.1",
+        "ajv-formats": "^3.0.1",
         "amqplib": "^0.10.5",
         "auth-header": "^1.0.0",
         "bowser": "^2.11.0",
@@ -70,15 +88,19 @@
         "intl-messageformat": "^10.7.15",
         "jose": "^6.0.8",
         "json-schema-to-ts": "^3.1.1",
+        "libphonenumber-js": "^1.12.6",
+        "locale-util": "^4.5.0",
         "mitt": "^3.0.1",
         "nanoid": "^5.1.0",
         "pino": "^9.6.0",
         "pino-abstract-transport": "^2.0.0",
+        "postmark": "^4.0.5",
         "proxy-addr": "^2.0.7",
         "redis": "^4.7.0",
         "regexparam": "^3.0.0",
         "resolve-accept-language": "^3.1.10",
         "slonik": "^46.4.0",
-        "sonic-boom": "^4.2.0"
+        "sonic-boom": "^4.2.0",
+        "zod": "^3.24.2"
     }
 }

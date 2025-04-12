@@ -1,31 +1,36 @@
 import http from "node:http";
 import { parse } from "regexparam";
-import { RequestContext } from "@services/http/on/request/context";
-import { ServerContext } from "@services/http/context";
-import { type JSONSchema } from "json-schema-to-ts";
+import { RequestContext } from "@services/http/on/request/index";
+import { ServerContext } from "@src/context";
+import { FromSchema, type JSONSchema } from "json-schema-to-ts";
 import { ApplicationHttpError } from "@infra/error-manager/error-manager";
+import { ajv } from "@infra/ajv/index";
+import { ValidateFunction } from "ajv";
 
-export type Route = {
+type HandlerResult =
+    | Record<string, unknown>
+    | Record<string, unknown>[]
+    | ApplicationHttpError
+    | Promise<Record<string, unknown> | Record<string, unknown>[] | ApplicationHttpError>;
+
+export type Route<Body extends Record<string, unknown> | undefined> = {
     name: string;
     method: http.IncomingMessage["method"];
     pattern: string;
-    body?: JSONSchema;
+    body?: Body;
+    validateBody?: ValidateFunction;
     query?: JSONSchema;
     params?: JSONSchema;
-    response?: JSONSchema;
+    response?: Record<number, JSONSchema>;
     trace?: boolean;
     handler: (
-        requestStore: RequestContext,
+        requestStore: RequestContext & { body: Body extends Record<string, unknown> ? FromSchema<Body> : undefined },
         serverStore: ServerContext,
-    ) =>
-        | Record<string, unknown>
-        | Record<string, unknown>[]
-        | ApplicationHttpError
-        | Promise<Record<string, unknown> | Record<string, unknown>[] | ApplicationHttpError>;
+    ) => HandlerResult;
 };
 
 class Router {
-    private routes: Route[] = [];
+    private routes: any[] = [];
     private locked = false;
 
     match(req: http.IncomingMessage) {
@@ -81,8 +86,17 @@ class Router {
         }
     }
 
-    append(route: Route) {
+    append<Body extends Record<string, unknown> | undefined>(route: Route<Body>) {
         if (this.locked) return;
+
+        if (this.routes.some(({ name }) => route.name === name)) {
+            throw new Error('A route with a name "' + route.name + '" already exists.');
+        }
+
+        if (route.body) {
+            route.validateBody = ajv.compile(route.body);
+        }
+
         this.routes.push(route);
     }
 
@@ -95,6 +109,10 @@ class Router {
             const blen = b.pattern.split("/");
             return alen > blen ? -1 : alen === blen ? 0 : -1;
         });
+    }
+
+    getRoutes() {
+        return this.routes as Route<Exclude<JSONSchema, boolean>>[];
     }
 }
 

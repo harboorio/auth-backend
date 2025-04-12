@@ -1,5 +1,6 @@
 import pino from "pino";
 import { pathv } from "@harboor/core";
+import path from "node:path";
 
 export { type Logger } from "pino";
 
@@ -11,7 +12,10 @@ export function createLogger({ name, level, redact }: { name: string; level: pin
         transport: {
             targets: [
                 {
-                    target: pathv("@infra/logger/transport-pretty.mjs"),
+                    target:
+                        process.env.NODE_ENV === "test"
+                            ? path.resolve(import.meta.dirname, "./transport-pretty.mjs")
+                            : pathv("@infra/logger/transport-pretty.mjs"),
                 },
             ],
         },

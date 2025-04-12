@@ -1,52 +1,64 @@
-import { serverContext } from "@services/http/context";
+import { serverContext } from "@src/context";
 import * as http from "node:http";
-import { resolveAcceptLanguage } from "resolve-accept-language";
-import { parse as parseAuthHeader, Token } from "auth-header";
-import { getTranslationFunction } from "@infra/message-catalog/index";
-import { AVAILABLE_LOCALES, DOMAIN_ID, REDACT } from "@src/config";
 import { readBody } from "@services/http/on/request/body";
 import { readUrl } from "@services/http/on/request/query";
 import { router } from "@infra/router/index";
-import { requestContext } from "@services/http/on/request/context";
 import { ApplicationHttpError } from "@infra/error-manager/error-manager";
-import { cached } from "@infra/cached/index";
 import { Responder } from "@infra/responder/index";
+import { middlewares } from "@infra/middleware-runner/index";
+import { getTranslationFunction } from "@infra/message-catalog/index";
+import { Token } from "auth-header";
 import { Tracing } from "@infra/tracing/tracing";
-import proxyAddr from "proxy-addr";
+import { Logger } from "pino";
+import "@services/http/on/request/middlewares/index";
+import { Origin } from "@features/origin/index";
+
+export interface RequestMiddlewareContext {
+    userAddrs: string[];
+    t: ReturnType<typeof getTranslationFunction>;
+    userAuthData: Token;
+    origin: Origin;
+    [k: string]: unknown;
+}
+
+export interface RouteMiddlewareContext {
+    tracing: Tracing;
+    logger: Logger;
+    [k: string]: unknown;
+}
+
+export type RequestContext = {
+    url: ReturnType<typeof readUrl>;
+    params: Record<string, string> | null;
+    body: object | null;
+    responder: Responder;
+} & RequestMiddlewareContext &
+    RouteMiddlewareContext;
 
 export default async function onRequest(
     req: http.IncomingMessage,
     res: http.ServerResponse<http.IncomingMessage> & { req: http.IncomingMessage },
 ) {
-    const serverStore = serverContext.getStore()!;
+    const context = serverContext.get();
 
-    serverStore.logger.info(req.method + " " + req.url);
+    context.logger.info(req.method + " " + req.url);
 
-    const responder = new Responder(req, res, (serverStore.env.get("APP_REQUEST_ORIGINS") ?? "").split(",")).cors(
+    const responder = new Responder(req, res, (context.env.get("APP_REQUEST_ORIGINS") ?? "").split(",")).cors(
         true,
         ["HEAD", "GET", "POST", "PUT"],
         ["Origin", "Authorization", "X-Requested-With", "Content-Type", "Accept", "Accept-Language"],
         3600,
     );
-    const userAddrs = proxyAddr.all(req);
-    const userLocale = cached.run<string>(
-        "acceptLanguage",
-        resolveAcceptLanguage,
-        req.headers["accept-language"] ?? "",
-        AVAILABLE_LOCALES,
-        AVAILABLE_LOCALES[0],
+    const requestMiddlewareContext = await middlewares.runRequestMiddlewares<RequestMiddlewareContext>(
+        context,
+        req,
+        res,
     );
-    const t = getTranslationFunction(userLocale instanceof Error ? AVAILABLE_LOCALES[0] : userLocale);
-
-    let userAuthData: Token = { scheme: "", token: null, params: {} };
-    try {
-        userAuthData = parseAuthHeader(req.headers["authorization"] ?? "");
-    } catch (e) {}
-
-    const readBodyResult = await readBody(req, serverStore, t);
-
-    if (readBodyResult.err) {
-        return responder.json(readBodyResult.err.toUser());
+    if (requestMiddlewareContext instanceof ApplicationHttpError) {
+        return responder.json(requestMiddlewareContext.toUser(), requestMiddlewareContext.httpStatus);
+    }
+    if (requestMiddlewareContext instanceof Error) {
+        return responder.serverError();
     }
 
     const { route, params } = router.match(req);
@@ -56,52 +68,66 @@ export default async function onRequest(
     }
 
     const url = readUrl(req);
-    const tracing = new Tracing({
-        projectName: DOMAIN_ID,
-        serviceName: route.name,
-        attrs: {
-            "os.arch": process.arch,
-            "os.platform": process.platform,
-            "os.pid": process.pid,
-            "node.version": process.version,
-            "http.method": req.method,
-            "http.url": req.url,
-        },
-        redact: REDACT,
-    });
-    tracing.createRootSpan({ name: "root" });
-    tracing.on("trace", async (trace) => {
-        serverStore.mq.channel.sendToQueue("tracing", Buffer.from(JSON.stringify(trace)), { persistent: true });
-        serverStore.logger.info("message sent to tracing worker");
-    });
-    const requestLogger = serverStore.logger.child({
-        httpRequestMethod: req.method,
-        httpRequestUrl: req.url,
-        traceId: tracing.getId(),
-    });
+    const readBodyResult = await readBody(req, context, requestMiddlewareContext.t);
+    if (readBodyResult.err) {
+        return responder.json(readBodyResult.err.toUser());
+    }
+    const contentType = req.headers["content-type"] ?? "";
+    const isJson = contentType === "application/json";
+    let body: object | null = null;
+    if (isJson && readBodyResult.data) {
+        try {
+            body = JSON.parse(readBodyResult.data.toString("utf-8"));
+        } catch (e) {}
+    }
+
+    const routeMiddlewareContext = await middlewares.runRouteMiddlewares<RouteMiddlewareContext>(
+        context,
+        req,
+        res,
+        route,
+    );
+    if (routeMiddlewareContext instanceof ApplicationHttpError) {
+        return responder.json(routeMiddlewareContext.toUser(), routeMiddlewareContext.httpStatus);
+    }
+    if (routeMiddlewareContext instanceof Error) {
+        return responder.serverError();
+    }
 
     res.on("finish", function onResponseFinish() {
-        tracing.getRootSpan().end();
-        tracing.end();
+        routeMiddlewareContext.tracing.getRootSpan().end();
+        routeMiddlewareContext.tracing.end();
     });
 
-    return requestContext.run(
-        { t, url, params, body: {}, tracing, logger: requestLogger, userAddrs, userAuthData },
-        async function onRequestContextReady() {
-            const requestStore = requestContext.getStore()!;
-
-            try {
-                const result = await route.handler(requestStore, serverStore);
-
-                if (result instanceof ApplicationHttpError) {
-                    return res.end(result.toUser());
-                }
-
-                return responder.json(result);
-            } catch (e) {
-                const _err = new ApplicationHttpError(t("error_unexpected"), "route_handler", 500, { cause: e });
-                return responder.json(_err.toUser());
-            }
+    const requestStore: RequestContext = Object.assign(
+        {},
+        {
+            url,
+            params,
+            body,
+            responder,
         },
+        requestMiddlewareContext,
+        routeMiddlewareContext,
     );
+
+    if (body && route.validateBody && !route.validateBody(body)) {
+        requestStore.logger.debug(route.validateBody.errors);
+        const err = new ApplicationHttpError(requestStore.t("error_bad_request"), "schema_validation", 400);
+        return responder.json(err.toUser(), err.httpStatus);
+    }
+
+    try {
+        const result = await route.handler(requestStore, context);
+
+        if (result instanceof ApplicationHttpError) {
+            return responder.json(result.toUser(), result.httpStatus);
+        }
+
+        return responder.json(result);
+    } catch (e) {
+        requestStore.logger.debug(e);
+        const _err = new ApplicationHttpError(requestStore.t("error_unexpected"), "route_handler", 500, { cause: e });
+        return responder.json(_err.toUser());
+    }
 }

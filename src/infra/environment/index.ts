@@ -16,6 +16,8 @@ export interface Environment {
     POSTGRES_CONN_STR: string;
     RABBITMQ_CONN_STR: string;
     PUBLIC_PORT: string;
+    CLICKHOUSE_CONN_URI: string;
+    POSTMARK_SERVER_TOKEN: string;
 }
 
 export class EnvironmentMap extends Map<keyof Environment, Environment[keyof Environment]> {

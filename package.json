@@ -30,6 +30,7 @@
     },
     "files": [
         "dist",
+        "schema",
         "package.json",
         "compose.base.yaml",
         "compose.prod.yaml"

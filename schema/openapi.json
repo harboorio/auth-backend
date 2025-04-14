@@ -19,7 +19,7 @@
     "paths": {
         "/": {
             "get": {
-                "operationId": "HomeGet",
+                "operationId": "Get",
                 "description": "Lorem ipsum",
                 "tags": [
                     "harboor"
@@ -52,7 +52,7 @@
         },
         "/otp": {
             "post": {
-                "operationId": "OtpRequestPost",
+                "operationId": "OtpPost",
                 "description": "Lorem ipsum",
                 "tags": [
                     "harboor"
@@ -195,7 +195,7 @@
                 }
             },
             "put": {
-                "operationId": "OtpVerifyPut",
+                "operationId": "OtpPut",
                 "description": "Lorem ipsum",
                 "tags": [
                     "harboor"

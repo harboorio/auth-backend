@@ -7,6 +7,7 @@ import { compile } from "json-schema-to-typescript";
 import "@features/index";
 import { router } from "@infra/router/index";
 import * as os from "node:os";
+import { TYPES_PREFIX } from "../schema/config.mjs";
 
 const typesToCompile: Record<string, unknown> = {};
 const schema = {
@@ -28,10 +29,16 @@ const schema = {
         },
     ],
     paths: router.getRoutes().reduce<Record<string, unknown>>((memo, r) => {
+        const name = r.pattern
+            .split("/")
+            .filter(Boolean)
+            .map((segment) => titleCase(segment.startsWith(":") ? segment.slice(1) : segment))
+            .join("");
         const method = (r.method as string).toLowerCase();
-        const methodTitleCased = method.slice(0, 1).toUpperCase() + method.slice(1);
+        const opId = name + titleCase(method);
+        const typeId = TYPES_PREFIX + opId;
         const op: Record<string, unknown> = {
-            operationId: r.name + methodTitleCased,
+            operationId: opId,
             description: "Lorem ipsum",
             tags: ["harboor"],
         };
@@ -45,7 +52,7 @@ const schema = {
                     },
                 },
             };
-            typesToCompile["HarboorAuth" + r.name + "Body"] = r.body;
+            typesToCompile[typeId + "Body"] = r.body;
         }
 
         if (r.query) {
@@ -57,7 +64,7 @@ const schema = {
                     },
                 },
             };
-            typesToCompile["HarboorAuth" + r.name + "Query"] = r.body;
+            typesToCompile[typeId + "Query"] = r.body;
         }
 
         if (r.response) {
@@ -74,11 +81,11 @@ const schema = {
                         },
                     };
 
-                    if (!typesToCompile["HarboorAuth" + r.name + "Response"]) {
-                        typesToCompile["HarboorAuth" + r.name + "Response"] = [];
+                    if (!typesToCompile[typeId + "Response"]) {
+                        typesToCompile[typeId + "Response"] = [];
                     }
 
-                    (typesToCompile["HarboorAuth" + r.name + "Response"] as any).push({
+                    (typesToCompile[typeId + "Response"] as any).push({
                         status,
                         schema: _schema,
                     });
@@ -136,4 +143,8 @@ for (const name of Object.keys(typesToCompile)) {
     }
 }
 
-await writeFile(path.resolve(import.meta.dirname, "../schema", "index.d.ts"), types.join(os.EOL + os.EOL));
+await writeFile(path.resolve(import.meta.dirname, "../schema", "index.d.ts"), types.join(os.EOL));
+
+function titleCase(text: string) {
+    return text.slice(0, 1).toUpperCase() + text.slice(1);
+}

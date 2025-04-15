@@ -19,7 +19,7 @@
     "paths": {
         "/": {
             "get": {
-                "operationId": "Get",
+                "operationId": "HomeGet",
                 "description": "Lorem ipsum",
                 "tags": [
                     "harboor"

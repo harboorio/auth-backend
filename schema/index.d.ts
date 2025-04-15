@@ -1,10 +1,10 @@
-export interface HarboorAuthGetResponse200 {
+export interface HarboorAuthHomeGetResponse200 {
   name: string;
   version: string;
   [k: string]: unknown;
 }
 
-export type HarboorAuthGetResponse = HarboorAuthGetResponse200
+export type HarboorAuthHomeGetResponse = HarboorAuthHomeGetResponse200
 export interface HarboorAuthOtpPostBody {
   credentialType: "email" | "phone";
   credential:

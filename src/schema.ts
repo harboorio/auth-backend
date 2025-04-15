@@ -29,11 +29,14 @@ const schema = {
         },
     ],
     paths: router.getRoutes().reduce<Record<string, unknown>>((memo, r) => {
-        const name = r.pattern
-            .split("/")
-            .filter(Boolean)
-            .map((segment) => titleCase(segment.startsWith(":") ? segment.slice(1) : segment))
-            .join("");
+        const name =
+            r.pattern === "/"
+                ? "Home"
+                : r.pattern
+                      .split("/")
+                      .filter(Boolean)
+                      .map((segment) => titleCase(segment.startsWith(":") ? segment.slice(1) : segment))
+                      .join("");
         const method = (r.method as string).toLowerCase();
         const opId = name + titleCase(method);
         const typeId = TYPES_PREFIX + opId;
